@@ -1,4 +1,5 @@
 from src.population import Population
+import math
 
 
 def simple_function(chromosome):
@@ -9,8 +10,19 @@ def simple_function(chromosome):
 def booth_function(chromosome):
     x = chromosome.x
     y = chromosome.y
-
     return pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2)
+
+
+def bukin_function(chromosome):
+    x = chromosome.x
+    y = chromosome.y
+    return 100 * (math.sqrt(abs(y - 0.01 * pow(x, 2)))) + 0.01 * abs(x + 10)
+
+
+def easom_function(chromosome):
+    x = chromosome.x
+    y = chromosome.y
+    return -math.cos(x) * math.cos(y) * math.exp(-pow(x - 3.14, 2) - pow(y - 3.14, 2))
 
 
 def genetic_algorithm_main():

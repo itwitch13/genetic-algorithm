@@ -53,7 +53,7 @@ class Population:
         self.generations += 1
 
     def crossover(self, a_partner: Chromosome, b_partner: Chromosome):
-        new_x = round((a_partner.x + b_partner.x) / 2)
-        new_y = round((a_partner.y + b_partner.y) / 2)
+        new_x = (a_partner.x + b_partner.x) / 2
+        new_y = (a_partner.y + b_partner.y) / 2
         return Chromosome(new_x, new_y)
 

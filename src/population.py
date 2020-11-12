@@ -1,4 +1,4 @@
-from src.Chromosome import Chromosome
+from src.chromosome import Chromosome
 import random
 import sys
 

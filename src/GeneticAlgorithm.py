@@ -1,12 +1,10 @@
 import random
 from math import *
 
+
 # levy function
 # x <-10,10>
 # f(x)=0, dla x=(1,1)
-
-size = 9
-x_boundaries = [-10,10]
 
 
 def generate_population(size, x_boundaries, y_boundaries):
@@ -15,11 +13,11 @@ def generate_population(size, x_boundaries, y_boundaries):
 
     population = []
     for i in range(size):
-        individual = {
+        chromosome = {
             "x": random.uniform(lower_x_boundary, upper_x_boundary),
             "y": random.uniform(lower_y_boundary, upper_y_boundary),
         }
-        population.append(individual)
+        population.append(chromosome)
 
     return population
 
@@ -28,10 +26,12 @@ def apply_function(individual):
     x = individual["x"]
     y = individual["y"]
     # TODO: gets some error, fix the function
-    return (sqrt(sin(3*x*pi)) + sqrt(x-1)*(1+sqrt(sin(3*y*pi))) + sqrt(y-1)*(1+sqrt(2*y*pi)))
+    return (pow(x, 2) + pow(y, 2))
+
 
 def sort_population_by_fitness(population):
     return sorted(population, key=apply_function)
+
 
 # ---- *** ----
 
@@ -67,8 +67,8 @@ def crossover(individual_a, individual_b):
 
 
 def mutate(individual):
-    next_x = individual["x"] + random.uniform(-0.05, 0.05)
-    next_y = individual["y"] + random.uniform(-0.05, 0.05)
+    next_x = individual["x"] + random.uniform(-0.01, 0.01)
+    next_y = individual["y"] + random.uniform(-0.01, 0.01)
 
     lower_boundary, upper_boundary = (-4, 4)
 
@@ -95,11 +95,12 @@ def make_next_generation(previous_population):
 
     return next_generation
 
+
 # ----------------------------------
 
-generations = 5
+generations = 100
 
-population = generate_population(size=10, x_boundaries=(-10, 10), y_boundaries=(-4, 4))
+population = generate_population(size=20, x_boundaries=(-2, 2), y_boundaries=(-2, 2))
 
 i = 1
 while True:
@@ -114,7 +115,6 @@ while True:
     i += 1
 
     population = make_next_generation(population)
-
 
 best_individual = sort_population_by_fitness(population)[-1]
 print("\nFINAL RESULT")

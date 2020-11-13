@@ -119,4 +119,3 @@ while True:
 best_individual = sort_population_by_fitness(population)[-1]
 print("\nFINAL RESULT")
 print(best_individual, apply_function(best_individual))
-

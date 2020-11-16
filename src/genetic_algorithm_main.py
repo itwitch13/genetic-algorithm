@@ -3,7 +3,7 @@ from src.example_functions import *
 
 
 def genetic_algorithm_main():
-    population_size = 50
+    population_size = 100
     generations = 20
     mutation_rate = 0.01
     x_boundaries = [-100, 100]
@@ -13,7 +13,9 @@ def genetic_algorithm_main():
     population.calculate_fitness()
     while generations != population.generations:
 
-        population.best_of_all_selection(percentage=0.3)
+        # population.best_of_all_selection(percentage=0.3)
+        # population.roulette_wheel_selection()
+        population.tournament_selection(3)
         population.generate_new_population()
         population.calculate_fitness()
         print(population.generations)

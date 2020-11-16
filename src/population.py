@@ -29,6 +29,36 @@ class Population:
         for i in range(best_chromosome_amount):
             self.mating_pool.append(self.population[i])
 
+    def roulette_wheel_selection(self):
+        fitness_sum = 0
+        for i in range(len(self.population)):
+            fitness_sum += self.population[i].fitness
+
+        for i in range(len(self.population)):
+            percentage_of_chance = 1 / (self.population[i].fitness / fitness_sum)
+            percentage_of_chance *= 100
+            percentage_of_chance = round(percentage_of_chance)
+            for j in range(percentage_of_chance):
+                self.mating_pool.append(self.population[i])
+
+    def tournament_selection(self, size_of_tournament):
+        available_chromosomes_indexes_list = [i for i in range(len(self.population))]
+
+        while len(available_chromosomes_indexes_list) != 0:
+            if len(available_chromosomes_indexes_list) >= size_of_tournament:
+                single_tournament = random.sample(available_chromosomes_indexes_list, size_of_tournament)
+            else:
+                single_tournament = available_chromosomes_indexes_list
+
+            winner_chromosome = self.population[single_tournament[0]]
+
+            for index in single_tournament:
+                if self.population[index].fitness < winner_chromosome.fitness:
+                    winner_chromosome = self.population[index]
+
+                available_chromosomes_indexes_list.remove(index)
+            self.mating_pool.append(winner_chromosome)
+
     def calculate_fitness(self):
         for chromosome in self.population:
             chromosome.fitness = self.target_function(chromosome)
@@ -56,4 +86,3 @@ class Population:
         new_x = (a_partner.x + b_partner.x) / 2
         new_y = (a_partner.y + b_partner.y) / 2
         return Chromosome(new_x, new_y)
-

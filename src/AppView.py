@@ -25,6 +25,9 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.populationLineEdit.setValidator(self.onlyInt)
         self.generationLineEdit.setValidator(self.onlyInt)
 
+        self.configuration_columns = ['Selection', 'Crossover', 'Mutation', 'Generations', 'Population', 'Time']
+        self.df_configuration = pd.DataFrame([], columns=self.configuration_columns)
+
         self.init_input_types()
         self.get_parameters()
         self.iteratePushButton.clicked.connect(self.run_genetic_algorithm)
@@ -85,4 +88,9 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.save_configuration_to_file(execution_time)
 
     def save_configuration_to_file(self, time):
-        pass
+        config = [self.selection, self.crossover, self.mutation, self.generations, self.population_size, time]
+        config_series = pd.Series(config, index=self.df_configuration.columns)
+        self.df_configuration = self.df_configuration.append(config_series, ignore_index=True)
+
+        with pd.ExcelWriter('configurations_param.xlsx') as writer:
+            self.df_configuration.to_excel(writer, sheet_name='Parameters', index=False)

@@ -1,4 +1,6 @@
 import logging
+import time
+import pandas as pd
 
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import QWidget
@@ -62,6 +64,8 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.y_boundaries = [int(num) for num in y_bound.split(',')]
 
     def run_genetic_algorithm(self):
+        start_time = time.clock()
+
         self.get_parameters()
         self.get_configurations()
         population = Population(booth_function, self.mutation_rate, self.population_size,
@@ -75,3 +79,10 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
             print(population.generations)
             for i in population.population:
                 print(f'x: {i.x} y: {i.y} f(x,y): {i.fitness}')
+
+        execution_time = time.clock() - start_time
+        self.timeLcdNumber.display(execution_time)
+        self.save_configuration_to_file(execution_time)
+
+    def save_configuration_to_file(self, time):
+        pass

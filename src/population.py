@@ -25,7 +25,8 @@ class Population:
     generations = 0
     finished = False
     perfect_score = 1
-    mutation_rate = 0
+    mutation_probability = 0
+    crossover_probability = 0
     population_size = 0
     highest_fitness = sys.maxsize
     boundaries_x = [0, 0]
@@ -33,9 +34,11 @@ class Population:
     x_length = 0
     y_length = 0
 
-    def __init__(self, target_function, mutation_rate, population_size, boundaries_x: list, boundaries_y: list):
+    def __init__(self, target_function, mutation_probability, crossover_probability, population_size,
+                 boundaries_x: list, boundaries_y: list):
         self.target_function = target_function
-        self.mutation_rate = mutation_rate
+        self.mutation_probability = mutation_probability
+        self.crossover_probability = crossover_probability
         self.population_size = population_size
         self.boundaries_x = boundaries_x
         self.boundaries_y = boundaries_y
@@ -90,26 +93,80 @@ class Population:
             if chromosome.fitness < self.highest_fitness:
                 self.highest_fitness = chromosome.fitness
 
+    # def generate_new_population(self):
+    #     for i in range(len(self.population)):
+    #         a_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
+    #         b_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
+    #
+    #         a_partner = self.mating_pool[a_partner_index]
+    #         b_partner = self.mating_pool[b_partner_index]
+    #
+    #         child = self.crossover_one_point(a_partner, b_partner)
+    #
+    #         child.mutate(self.mutation_rate)
+    #
+    #         self.population[i] = child
+    #
+    #     self.mating_pool.clear()
+    #     self.generations += 1
+
     def generate_new_population(self):
-        for i in range(len(self.population)):
+        for i in range(0, len(self.population), 2):
             a_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
             b_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
 
             a_partner = self.mating_pool[a_partner_index]
             b_partner = self.mating_pool[b_partner_index]
 
-            child = self.crossover(a_partner, b_partner)
+            crossover_chance = random.uniform(0, 1)
+            if crossover_chance < self.crossover_probability:
+                a_partner, b_partner = self.crossover_two_point(a_partner, b_partner)
 
-            child.mutate(self.mutation_rate)
+            a_partner.mutate(self.mutation_probability)
+            b_partner.mutate(self.mutation_probability)
 
-            self.population[i] = child
+            self.population[i] = a_partner
+            self.population[i + 1] = b_partner
 
         self.mating_pool.clear()
         self.generations += 1
 
-    def crossover(self, a_partner: Chromosome, b_partner: Chromosome):
+    def crossover_one_point(self, a_partner: Chromosome, b_partner: Chromosome):
         cut_index_x = round(self.x_length / 2)
         cut_index_y = round(self.y_length / 2)
-        new_x = a_partner.x[0:cut_index_x] + b_partner.x[cut_index_x:]
-        new_y = a_partner.y[0:cut_index_y] + b_partner.y[cut_index_y:]
-        return Chromosome(new_x, new_y, is_random=False)
+        a_partner.x = a_partner.x[0:cut_index_x] + b_partner.x[cut_index_x:]
+        b_partner.x = b_partner.x[0:cut_index_x] + a_partner.x[cut_index_x:]
+        a_partner.y = a_partner.y[0:cut_index_y] + b_partner.y[cut_index_y:]
+        b_partner.y = b_partner.y[0:cut_index_y] + a_partner.y[cut_index_y:]
+        return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
+                                                                                 is_random=False)
+
+    def crossover_two_point(self, a_partner: Chromosome, b_partner: Chromosome):
+        cut_index_x, x_rest = divmod(self.x_length, 3)
+        cut_index_y, y_rest = divmod(self.y_length, 3)
+        a_partner.x = a_partner.x[0:cut_index_x] + b_partner.x[cut_index_x:2 * cut_index_x + x_rest] + a_partner.x[
+                                                                                                       2 * cut_index_x + x_rest:]
+        b_partner.x = b_partner.x[0:cut_index_x] + a_partner.x[cut_index_x:2 * cut_index_x + x_rest] + b_partner.x[
+                                                                                                       2 * cut_index_x + x_rest:]
+        a_partner.y = a_partner.y[0:cut_index_y] + b_partner.y[cut_index_y:2 * cut_index_y + y_rest] + a_partner.y[
+                                                                                                       2 * cut_index_y + y_rest:]
+        b_partner.y = b_partner.y[0:cut_index_y] + a_partner.y[cut_index_y:2 * cut_index_y + y_rest] + b_partner.y[
+                                                                                                       2 * cut_index_y + y_rest:]
+        return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
+                                                                                 is_random=False)
+
+    def crossover_homogenous(self, a_partner: Chromosome, b_partner: Chromosome):
+        for i in range(self.x_length):
+            if i % 2 == 0:
+                old_x = a_partner.x[i]
+                a_partner.x[i] = b_partner.x[i]
+                b_partner.x[i] = old_x
+
+        for i in range(self.y_length):
+            if i % 2 == 0:
+                old_y = a_partner.y[i]
+                a_partner.y[i] = b_partner.y[i]
+                b_partner.y[i] = old_y
+
+        return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
+                                                                                 is_random=False)

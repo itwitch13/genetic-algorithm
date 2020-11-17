@@ -10,19 +10,20 @@ def binary_to_float(binary_value, border_a, border_b, m):
 
 
 def genetic_algorithm_main():
-    population_size = 1000
-    generations = 50
-    mutation_rate = 0.01
+    population_size = 100
+    generations = 100
+    mutation_probability = 0.01
+    crossover_probability = 0.90
     x_boundaries = [-10, 10]
     y_boundaries = [-10, 10]
 
-    population = Population(booth_function, mutation_rate, population_size, x_boundaries, y_boundaries)
+    population = Population(booth_function, mutation_probability, crossover_probability, population_size, x_boundaries, y_boundaries)
     population.calculate_fitness()
     while generations != population.generations:
 
-        # population.best_of_all_selection(percentage=0.3)
+        population.best_of_all_selection(percentage=0.2)
         # population.roulette_wheel_selection()
-        population.tournament_selection(3)
+        # population.tournament_selection(3)
         population.generate_new_population()
         population.calculate_fitness()
         print(population.generations)

@@ -17,8 +17,12 @@ class Chromosome:
             self.y = args[1]
 
     def mutate(self, mutation_rate):
+        mutated = False
         for i in range(len(self.x)):
             chance = random.uniform(0, 1)
             if chance < mutation_rate:
                 self.x[i] = 1 if self.x[i] == 0 else 0
                 self.y[i] = 1 if self.y[i] == 0 else 0
+                mutated = True
+            if mutated:
+                break

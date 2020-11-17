@@ -1,6 +1,19 @@
 from src.chromosome import Chromosome
 import random
 import sys
+import math
+
+
+def calculate_bin_length(x_boundary: list):
+    binary = (x_boundary[1] - x_boundary[0]) * pow(10, 6) + 1
+    m = math.log2(binary)
+    return math.ceil(m)
+
+
+def binary_to_float(binary_value, border_a, border_b, m):
+    combined_value = ''.join(map(str, binary_value))
+    x = border_a + int(combined_value, 2) * (border_b - border_a) / (pow(2, m) - 1)
+    return x
 
 
 class Population:
@@ -15,13 +28,23 @@ class Population:
     mutation_rate = 0
     population_size = 0
     highest_fitness = sys.maxsize
+    boundaries_x = [0, 0]
+    boundaries_y = [0, 0]
+    x_length = 0
+    y_length = 0
 
-    def __init__(self, target_function, mutation_rate, population_size, x_boundaries: list, y_boundaries: list):
+    def __init__(self, target_function, mutation_rate, population_size, boundaries_x: list, boundaries_y: list):
         self.target_function = target_function
         self.mutation_rate = mutation_rate
         self.population_size = population_size
+        self.boundaries_x = boundaries_x
+        self.boundaries_y = boundaries_y
+
+        self.x_length = calculate_bin_length(boundaries_x)
+        self.y_length = calculate_bin_length(boundaries_y)
+
         for i in range(population_size):
-            self.population.append(Chromosome(x_boundaries[0], x_boundaries[1], y_boundaries[0], y_boundaries[1]))
+            self.population.append(Chromosome(self.x_length, self.y_length, is_random=True))
 
     def best_of_all_selection(self, percentage: float):
         best_chromosome_amount = round(len(self.population) * percentage)
@@ -61,7 +84,9 @@ class Population:
 
     def calculate_fitness(self):
         for chromosome in self.population:
-            chromosome.fitness = self.target_function(chromosome)
+            x = binary_to_float(chromosome.x, self.boundaries_x[0], self.boundaries_x[1], self.x_length)
+            y = binary_to_float(chromosome.y, self.boundaries_y[0], self.boundaries_y[1], self.y_length)
+            chromosome.fitness = self.target_function(x, y)
             if chromosome.fitness < self.highest_fitness:
                 self.highest_fitness = chromosome.fitness
 
@@ -83,6 +108,8 @@ class Population:
         self.generations += 1
 
     def crossover(self, a_partner: Chromosome, b_partner: Chromosome):
-        new_x = (a_partner.x + b_partner.x) / 2
-        new_y = (a_partner.y + b_partner.y) / 2
-        return Chromosome(new_x, new_y)
+        cut_index_x = round(self.x_length / 2)
+        cut_index_y = round(self.y_length / 2)
+        new_x = a_partner.x[0:cut_index_x] + b_partner.x[cut_index_x:]
+        new_y = a_partner.y[0:cut_index_y] + b_partner.y[cut_index_y:]
+        return Chromosome(new_x, new_y, is_random=False)

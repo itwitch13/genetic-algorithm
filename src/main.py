@@ -23,7 +23,6 @@ class LevyOptimalization(QtWidgets.QMainWindow, QtWidgets.QWidget):
         # self.dataModel = GeneticModel()
 
 
-
 def myExceptionhook(exc_type, exc_value, exc_traceback):
     log.critical("Unexpected exception occurred!",
                  exc_info=(exc_type, exc_value, exc_traceback))

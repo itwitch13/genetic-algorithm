@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-.idea/
+.idea
 src/.DS_Store
 src/ui/.DS_Store
 

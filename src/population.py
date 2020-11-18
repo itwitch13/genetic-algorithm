@@ -27,6 +27,7 @@ class Population:
     perfect_score = 1
     mutation_probability = 0
     crossover_probability = 0
+    elite_strategy_amount = 0
     population_size = 0
     highest_fitness = sys.maxsize
     boundaries_x = [0, 0]
@@ -34,11 +35,13 @@ class Population:
     x_length = 0
     y_length = 0
 
-    def __init__(self, target_function, mutation_probability, crossover_probability, population_size,
+    def __init__(self, target_function, mutation_probability, crossover_probability, elite_strategy_amount,
+                 population_size,
                  boundaries_x: list, boundaries_y: list):
         self.target_function = target_function
         self.mutation_probability = mutation_probability
         self.crossover_probability = crossover_probability
+        self.elite_strategy_amount = elite_strategy_amount
         self.population_size = population_size
         self.boundaries_x = boundaries_x
         self.boundaries_y = boundaries_y
@@ -111,22 +114,35 @@ class Population:
     #     self.generations += 1
 
     def generate_new_population(self):
+        amount_of_elite_strategy_individuals = 0
         for i in range(0, len(self.population), 2):
             a_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
             b_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
 
             a_partner = self.mating_pool[a_partner_index]
+            a_partner_if_is_elite = self.mating_pool[a_partner_index]
+
             b_partner = self.mating_pool[b_partner_index]
+            b_partner_if_is_elite = self.mating_pool[b_partner_index]
 
             crossover_chance = random.uniform(0, 1)
             if crossover_chance < self.crossover_probability:
                 a_partner, b_partner = self.crossover_two_point(a_partner, b_partner)
 
-            a_partner.mutate(self.mutation_probability)
-            b_partner.mutate(self.mutation_probability)
+            a_partner = self.mutation(a_partner, 'two_points_mutation')
+            b_partner = self.mutation(b_partner, 'two_points_mutation')
 
-            self.population[i] = a_partner
-            self.population[i + 1] = b_partner
+            if self.check_if_elite(a_partner_if_is_elite, amount_of_elite_strategy_individuals):
+                self.population[i] = a_partner_if_is_elite
+                amount_of_elite_strategy_individuals += 1
+            else:
+                self.population[i] = a_partner
+
+            if self.check_if_elite(b_partner_if_is_elite, amount_of_elite_strategy_individuals):
+                self.population[i + 1] = b_partner_if_is_elite
+                amount_of_elite_strategy_individuals += 1
+            else:
+                self.population[i + 1] = b_partner
 
         self.mating_pool.clear()
         self.generations += 1
@@ -170,3 +186,20 @@ class Population:
 
         return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
                                                                                  is_random=False)
+
+    def check_if_elite(self, a: Chromosome, current_count: int):
+        if (a.fitness == self.highest_fitness) and (current_count <= self.elite_strategy_amount):
+            return True
+        else:
+            return False
+
+    def mutation(self, a: Chromosome, mutation_type: str) -> Chromosome:
+        local_mutation_probability = random.uniform(0, 1)
+        if local_mutation_probability < self.mutation_probability:
+            if mutation_type == 'edge_mutation':
+                a.edge_mutation()
+            elif mutation_type == 'one_point_mutation':
+                a.one_point_mutation()
+            elif mutation_type == 'two_points_mutation':
+                a.two_points_mutation()
+        return a

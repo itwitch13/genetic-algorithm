@@ -52,6 +52,14 @@ class Population:
         for i in range(population_size):
             self.population.append(Chromosome(self.x_length, self.y_length, is_random=True))
 
+        self.plot_x = []
+        self.plot_y = []
+        self.plot_fx = []
+
+    def get_configuration(self, mutation_type, crossover_type):
+        self.mutation_type = mutation_type
+        self.crossover_type = crossover_type
+
     def best_of_all_selection(self, percentage: float):
         best_chromosome_amount = round(len(self.population) * percentage)
         self.population.sort(key=lambda chromosome: chromosome.fitness, reverse=False)
@@ -89,12 +97,23 @@ class Population:
             self.mating_pool.append(winner_chromosome)
 
     def calculate_fitness(self):
+        x_list, y_list, fx_list = [], [], []
         for chromosome in self.population:
             x = binary_to_float(chromosome.x, self.boundaries_x[0], self.boundaries_x[1], self.x_length)
             y = binary_to_float(chromosome.y, self.boundaries_y[0], self.boundaries_y[1], self.y_length)
             chromosome.fitness = self.target_function(x, y)
+            x_list.append(x)
+            y_list.append(y)
+            fx_list.append(chromosome.fitness)
             if chromosome.fitness < self.highest_fitness:
                 self.highest_fitness = chromosome.fitness
+
+        self.plot_x.append(x_list)
+        self.plot_y.append(y_list)
+        self.plot_fx.append(fx_list)
+
+    def get_plots_parameters(self):
+        return self.plot_x, self.plot_y, self.plot_fx
 
     # def generate_new_population(self):
     #     for i in range(len(self.population)):
@@ -127,10 +146,11 @@ class Population:
 
             crossover_chance = random.uniform(0, 1)
             if crossover_chance < self.crossover_probability:
-                a_partner, b_partner = self.crossover_two_point(a_partner, b_partner)
+                # a_partner, b_partner = self.crossover_two_point(a_partner, b_partner)
+                a_partner, b_partner = self.crossover(a_partner, b_partner, self.crossover_type)
 
-            a_partner = self.mutation(a_partner, 'two_points_mutation')
-            b_partner = self.mutation(b_partner, 'two_points_mutation')
+            a_partner = self.mutation(a_partner, self.mutation_type)
+            b_partner = self.mutation(b_partner, self.mutation_type)
 
             if self.check_if_elite(a_partner_if_is_elite, amount_of_elite_strategy_individuals):
                 self.population[i] = a_partner_if_is_elite
@@ -202,4 +222,22 @@ class Population:
                 a.one_point_mutation()
             elif mutation_type == 'two_points_mutation':
                 a.two_points_mutation()
+            elif mutation_type == 'inversion_mutation':
+                a.inversion_mutation()
         return a
+
+    def crossover(self, a: Chromosome, b: Chromosome, crossover_type: str):
+        if crossover_type == 'crossover_one_point':
+            return self.crossover_one_point(a, b)
+        elif crossover_type == 'crossover_two_point':
+            return self.crossover_two_point(a, b)
+        elif crossover_type == 'crossover_homogenous':
+            return self.crossover_homogenous(a, b)
+
+    def selection(self, selection_type: str, percentage, size_of_tournament):
+        if selection_type == 'best_of_all_selection':
+            self.best_of_all_selection(percentage)
+        elif selection_type == 'roulette_wheel_selection':
+            self.roulette_wheel_selection()
+        elif selection_type == 'tournament_selection':
+            self.tournament_selection(size_of_tournament)

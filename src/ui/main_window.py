@@ -55,6 +55,12 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout()
         self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.label_12 = QtWidgets.QLabel(self.graphTab)
+        self.label_12.setObjectName("label_12")
+        self.verticalLayout_6.addWidget(self.label_12)
+        self.iterationLineEdit = QtWidgets.QLineEdit(self.graphTab)
+        self.iterationLineEdit.setObjectName("iterationLineEdit")
+        self.verticalLayout_6.addWidget(self.iterationLineEdit)
         self.label_4 = QtWidgets.QLabel(self.graphTab)
         self.label_4.setObjectName("label_4")
         self.verticalLayout_6.addWidget(self.label_4)
@@ -281,6 +287,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label_12.setText(_translate("MainWindow", "Iteration"))
         self.label_4.setText(_translate("MainWindow", "Generate plot by:"))
         self.graphValPushButton.setText(_translate("MainWindow", "Function values"))
         self.graphAverPushButton.setText(_translate("MainWindow", "Average value of the function"))

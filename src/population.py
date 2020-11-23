@@ -115,22 +115,6 @@ class Population:
     def get_plots_parameters(self):
         return self.plot_x, self.plot_y, self.plot_fx
 
-    # def generate_new_population(self):
-    #     for i in range(len(self.population)):
-    #         a_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
-    #         b_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
-    #
-    #         a_partner = self.mating_pool[a_partner_index]
-    #         b_partner = self.mating_pool[b_partner_index]
-    #
-    #         child = self.crossover_one_point(a_partner, b_partner)
-    #
-    #         child.mutate(self.mutation_rate)
-    #
-    #         self.population[i] = child
-    #
-    #     self.mating_pool.clear()
-    #     self.generations += 1
 
     def generate_new_population(self):
         amount_of_elite_strategy_individuals = 0

@@ -46,6 +46,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.graphAverPushButton.clicked.connect(self.create_average_plot)
         self.times = [0]
         self.graphPlot = self.graphWidget.plot([], [])
+        self.every_generation_best_fitness = []
 
 
     def init_input_types(self):
@@ -93,6 +94,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
 
     def run_genetic_algorithm(self):
         start_time = time.clock()
+        self.every_generation_best_fitness.clear()
         self.get_parameters()
         self.get_configurations()
         self.plot_x, self.plot_y, self.plot_fx = [], [], []
@@ -113,6 +115,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
                     f'x: {self.binary_to_float(i.x, self.x_boundaries[0], self.x_boundaries[1], len(i.x))} \
                     y: {self.binary_to_float(i.y, self.y_boundaries[0], self.y_boundaries[1], len(i.y))} '
                     f'f(x,y): {i.fitness}')
+            self.every_generation_best_fitness.append(population.highest_fitness)
 
         timeOfAll = time.clock() - start_time
         execution_time = timeOfAll - self.times[-1]
@@ -120,61 +123,26 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.timeLcdNumber.display(execution_time)
 
         self.plot_x, self.plot_y, self.plot_fx = population.get_plots_parameters()
+        population.population.clear()
         self.save_configuration_to_file(execution_time)
         print('end')
 
-    # def create_plots(self):
-    #     g = gl.GLGridItem()
-    #     g.scale(1, 1, 1)
-    #     g.setDepthValue(100)  # draw grid after surfaces since they may be translucent
-    #     self.graphWidget.addItem(g)
-    #
-    #     Z = np.ones((2, 2))
-    #     p1 = gl.GLSurfacePlotItem(z=self.plot_fx[49], shader='shaded', color=(0.5, 0.5, 1, 1))
-    #     self.graphWidget.addItem(p1)
-    #     self.graphWidget.plot(self.plot_x[49], self.plot_y[49])
-
     def create_value_plot(self):
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        i = int(self.iterationLineEdit.text())-1
-
-        x = np.linspace(min(self.plot_x[i]), max(self.plot_x[i]), 100)
-        y = np.linspace(min(self.plot_y[i]), max(self.plot_y[i]), 100)
-        x, y = np.meshgrid(x, y)
-        z = (pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2))
-
-        ax.plot_surface(x, y, z, color='g')
+        plt.plot(self.every_generation_best_fitness)
+        self.graphPlot.setData(self.every_generation_best_fitness)
         plt.show()
         plt.savefig('plot3D.png')
 
     def create_average_plot(self):
         fx_averages = [mean(single_list) for single_list in self.plot_fx]
-        stdDev = [stdev(single_list) for single_list in self.plot_fx]
 
-        self.graphPlot.setData(fx_averages, stdDev)
+        self.graphPlot.setData(fx_averages)
 
-    # def create_plot_matlib(self):
-    #     # for 3D animation
-    #     def data(i):
-    #         ax.clear()
-    #
-    #         x = np.linspace(min(self.plot_x[i]), max(self.plot_x[i]), 100)
-    #         y = np.linspace(min(self.plot_y[i]), max(self.plot_y[i]), 100)
-    #         x, y = np.meshgrid(x, y)
-    #         z = (pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2))
-    #         line = ax.plot_surface(x, y, z, color='b')
-    #         return line,
-    #
-    #     fig = plt.figure()
-    #     ax = fig.add_subplot(111, projection='3d')
-    #
-    #     for i in range(len(self.plot_x)):
-    #         anim = animation.FuncAnimation(fig, data, frames=len(self.plot_x), interval=30, blit=False)
-    #         plt.close(anim._fig)
-    #
-    #         # plt.show()
-    #         anim.save('temp.gif', writer=animation.PillowWriter())
+    def create_standard_deviation_plot(self):
+        std_dev = [stdev(single_list) for single_list in self.plot_fx]
+
+        self.graphPlot.setData(std_dev)
 
     def save_configuration_to_file(self, time):
         config = [self.selection_type, self.crossover_type, self.mutation_type,

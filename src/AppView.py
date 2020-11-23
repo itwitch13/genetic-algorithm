@@ -1,5 +1,7 @@
 import logging
 import time
+from statistics import mean, stdev
+
 import pandas as pd
 import numpy as np
 import pyqtgraph as pg
@@ -40,7 +42,11 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.iteratePushButton.clicked.connect(self.run_genetic_algorithm)
 
         # self.graphWidget.setBackground('w')
-        self.graphValPushButton.clicked.connect(self.create_plots)
+        self.graphValPushButton.clicked.connect(self.create_value_plot)
+        self.graphAverPushButton.clicked.connect(self.create_average_plot)
+        self.times = [0]
+        self.graphPlot = self.graphWidget.plot([], [])
+
 
     def init_input_types(self):
         """
@@ -89,7 +95,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         start_time = time.clock()
         self.get_parameters()
         self.get_configurations()
-        self.plot_x, self.plot_y, self.fx = [], [], []
+        self.plot_x, self.plot_y, self.plot_fx = [], [], []
         population = Population(booth_function, self.mutation_probability, self.crossover_probability,
                                 self.elite_strategy_amount, self.population_size, self.x_boundaries,
                                 self.y_boundaries)
@@ -108,9 +114,12 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
                     y: {self.binary_to_float(i.y, self.y_boundaries[0], self.y_boundaries[1], len(i.y))} '
                     f'f(x,y): {i.fitness}')
 
-        execution_time = time.clock() - start_time
-        self.plot_x, self.plot_y, self.fx = population.get_plots_parameters()
+        timeOfAll = time.clock() - start_time
+        execution_time = timeOfAll - self.times[-1]
+        self.times.append(timeOfAll)
         self.timeLcdNumber.display(execution_time)
+
+        self.plot_x, self.plot_y, self.plot_fx = population.get_plots_parameters()
         self.save_configuration_to_file(execution_time)
         print('end')
 
@@ -121,11 +130,11 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
     #     self.graphWidget.addItem(g)
     #
     #     Z = np.ones((2, 2))
-    #     p1 = gl.GLSurfacePlotItem(z=self.fx[49], shader='shaded', color=(0.5, 0.5, 1, 1))
+    #     p1 = gl.GLSurfacePlotItem(z=self.plot_fx[49], shader='shaded', color=(0.5, 0.5, 1, 1))
     #     self.graphWidget.addItem(p1)
     #     self.graphWidget.plot(self.plot_x[49], self.plot_y[49])
 
-    def create_plots(self):
+    def create_value_plot(self):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         i = int(self.iterationLineEdit.text())-1
@@ -138,6 +147,12 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         ax.plot_surface(x, y, z, color='g')
         plt.show()
         plt.savefig('plot3D.png')
+
+    def create_average_plot(self):
+        fx_averages = [mean(single_list) for single_list in self.plot_fx]
+        stdDev = [stdev(single_list) for single_list in self.plot_fx]
+
+        self.graphPlot.setData(fx_averages, stdDev)
 
     # def create_plot_matlib(self):
     #     # for 3D animation

@@ -44,10 +44,11 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         # self.graphWidget.setBackground('w')
         self.graphValPushButton.clicked.connect(self.create_value_plot)
         self.graphAverPushButton.clicked.connect(self.create_average_plot)
+        self.stdDevPushButton.clicked.connect(self.create_standard_deviation_plot)
+
         self.times = [0]
         self.graphPlot = self.graphWidget.plot([], [])
         self.every_generation_best_fitness = []
-
 
     def init_input_types(self):
         """
@@ -67,7 +68,11 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.mutationLineEdit.setText(str(0.01))
         self.xboundLineEdit.setText('-10,10')
         self.yboundLneEdit.setText('-10,10')
-        self.iterationLineEdit.setText('0')
+        self.iterationLineEdit.setText(str(0))
+        self.crossProbLineEdit.setText(str(0.9))
+        self.eliteLineEdit.setText(str(2))
+        self.percentLineEdit.setText(str(0.03))
+        self.tournamentLineEdit.setText(str(3))
 
     def get_configurations(self):
         self.selection_type = str(self.selectionComboBox.currentText())
@@ -82,10 +87,11 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.x_boundaries = [int(num) for num in x_bound.split(',')]
         y_bound = self.yboundLneEdit.text()
         self.y_boundaries = [int(num) for num in y_bound.split(',')]
-        self.crossover_probability = 0.9
-        self.elite_strategy_amount = 2
-        self.percentage_selection = 0.03
-        self.size_of_tournament = 3
+        self.size_of_tournament = int(self.tournamentLineEdit.text())
+        self.percentage_selection = float(self.percentLineEdit.text())
+        self.elite_strategy_amount = int(self.eliteLineEdit.text())
+        self.crossover_probability = float(self.crossProbLineEdit.text())
+
 
     def binary_to_float(self, binary_value, border_a, border_b, m):
         combined_value = ''.join(map(str, binary_value))

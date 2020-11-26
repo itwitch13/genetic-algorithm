@@ -3,11 +3,7 @@ import random
 import sys
 import math
 
-
-def calculate_bin_length(x_boundary: list):
-    binary = (x_boundary[1] - x_boundary[0]) * pow(10, 6) + 1
-    m = math.log2(binary)
-    return math.ceil(m)
+from src.chromosome import calculate_bin_length
 
 
 def binary_to_float(binary_value, border_a, border_b, m):
@@ -34,9 +30,10 @@ class Population:
     boundaries_y = [0, 0]
     x_length = 0
     y_length = 0
+    is_in_real_value = False
 
     def __init__(self, target_function, mutation_probability, crossover_probability, elite_strategy_amount,
-                 population_size,
+                 population_size, is_in_real_value, k_coefficient,
                  boundaries_x: list, boundaries_y: list):
         self.target_function = target_function
         self.mutation_probability = mutation_probability
@@ -45,12 +42,19 @@ class Population:
         self.population_size = population_size
         self.boundaries_x = boundaries_x
         self.boundaries_y = boundaries_y
+        self.is_in_real_value = is_in_real_value
+        self.k_coeff = k_coefficient
 
         self.x_length = calculate_bin_length(boundaries_x)
         self.y_length = calculate_bin_length(boundaries_y)
 
         for i in range(population_size):
-            self.population.append(Chromosome(self.x_length, self.y_length, is_random=True))
+            if not is_in_real_value:
+                self.population.append(
+                    Chromosome(self.x_length, self.y_length, is_random=True, is_in_real_value=is_in_real_value))
+            elif is_in_real_value:
+                self.population.append(
+                    Chromosome(self.boundaries_x, self.boundaries_y, is_random=True, is_in_real_value=is_in_real_value))
 
         self.plot_x = []
         self.plot_y = []
@@ -99,8 +103,12 @@ class Population:
     def calculate_fitness(self):
         x_list, y_list, fx_list = [], [], []
         for chromosome in self.population:
-            x = binary_to_float(chromosome.x, self.boundaries_x[0], self.boundaries_x[1], self.x_length)
-            y = binary_to_float(chromosome.y, self.boundaries_y[0], self.boundaries_y[1], self.y_length)
+            if not self.is_in_real_value:
+                x = binary_to_float(chromosome.x, self.boundaries_x[0], self.boundaries_x[1], self.x_length)
+                y = binary_to_float(chromosome.y, self.boundaries_y[0], self.boundaries_y[1], self.y_length)
+            else:
+                x = chromosome.x
+                y = chromosome.y
             chromosome.fitness = self.target_function(x, y)
             x_list.append(x)
             y_list.append(y)
@@ -114,7 +122,6 @@ class Population:
 
     def get_plots_parameters(self):
         return self.plot_x, self.plot_y, self.plot_fx
-
 
     def generate_new_population(self):
         amount_of_elite_strategy_individuals = 0
@@ -130,8 +137,13 @@ class Population:
 
             crossover_chance = random.uniform(0, 1)
             if crossover_chance < self.crossover_probability:
-                # a_partner, b_partner = self.crossover_two_point(a_partner, b_partner)
-                a_partner, b_partner = self.crossover(a_partner, b_partner, self.crossover_type)
+                if self.crossover_type == 'real_values_crossover_heurestic':
+                    a_partner = self.crossover(a_partner, b_partner, self.crossover_type)
+                    c_partner_index = round(random.randint(0, len(self.mating_pool) - 1))
+                    c_partner = self.mating_pool[c_partner_index]
+                    b_partner = self.crossover(b_partner, c_partner, self.crossover_type)
+                else:
+                    a_partner, b_partner = self.crossover(a_partner, b_partner, self.crossover_type)
 
             a_partner = self.mutation(a_partner, self.mutation_type)
             b_partner = self.mutation(b_partner, self.mutation_type)
@@ -172,8 +184,10 @@ class Population:
                                                                                                        2 * cut_index_y + y_rest:]
         b_partner.y = b_partner.y[0:cut_index_y] + a_partner.y[cut_index_y:2 * cut_index_y + y_rest] + b_partner.y[
                                                                                                        2 * cut_index_y + y_rest:]
-        return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
-                                                                                 is_random=False)
+        return Chromosome(a_partner.x, a_partner.y, is_random=False,
+                          is_in_real_value=self.is_in_real_value), Chromosome(b_partner.x, b_partner.y,
+                                                                              is_random=False,
+                                                                              is_in_real_value=self.is_in_real_value)
 
     def crossover_homogenous(self, a_partner: Chromosome, b_partner: Chromosome):
         for i in range(self.x_length):
@@ -188,8 +202,30 @@ class Population:
                 a_partner.y[i] = b_partner.y[i]
                 b_partner.y[i] = old_y
 
-        return Chromosome(a_partner.x, a_partner.y, is_random=False), Chromosome(b_partner.x, b_partner.y,
-                                                                                 is_random=False)
+        return Chromosome(a_partner.x, a_partner.y, is_random=False,
+                          is_in_real_value=self.is_in_real_value), Chromosome(b_partner.x, b_partner.y,
+                                                                              is_random=False,
+                                                                              is_in_real_value=self.is_in_real_value)
+
+    def real_values_crossover_arithmetic(self, a_partner: Chromosome, b_partner: Chromosome):
+        a_partner.x = self.k_coeff * a_partner.x + (1 - self.k_coeff) * b_partner.x
+        a_partner.y = self.k_coeff * a_partner.y + (1 - self.k_coeff) * b_partner.y
+
+        b_partner.x = self.k_coeff * b_partner.x + (1 - self.k_coeff) * a_partner.x
+        b_partner.y = self.k_coeff * b_partner.y + (1 - self.k_coeff) * a_partner.y
+
+        return Chromosome(a_partner.x, a_partner.y, is_random=False,
+                          is_in_real_value=self.is_in_real_value), Chromosome(b_partner.x, b_partner.y,
+                                                                              is_random=False,
+                                                                              is_in_real_value=self.is_in_real_value)
+
+    def real_values_crossover_heurestic(self, a_partner: Chromosome, b_partner: Chromosome):
+        if b_partner.x > a_partner.x and b_partner.y > a_partner.y:
+            k = random.uniform(0, 1)
+            a_partner.x = k * (b_partner.x - a_partner.x) + a_partner.x
+            a_partner.y = k * (b_partner.y - a_partner.y) + a_partner.y
+
+        return Chromosome(a_partner.x, a_partner.y, is_random=False, is_in_real_value=self.is_in_real_value)
 
     def check_if_elite(self, a: Chromosome, current_count: int):
         if (a.fitness == self.highest_fitness) and (current_count <= self.elite_strategy_amount):
@@ -208,6 +244,8 @@ class Population:
                 a.two_points_mutation()
             elif mutation_type == 'inversion_mutation':
                 a.inversion_mutation()
+            elif mutation_type == 'real_values_uniform_mutation':
+                a.real_values_uniform_mutation(self.boundaries_x, self.boundaries_y)
         return a
 
     def crossover(self, a: Chromosome, b: Chromosome, crossover_type: str):
@@ -217,6 +255,10 @@ class Population:
             return self.crossover_two_point(a, b)
         elif crossover_type == 'crossover_homogenous':
             return self.crossover_homogenous(a, b)
+        elif crossover_type == 'real_values_crossover_arithmetic':
+            return self.real_values_crossover_arithmetic(a, b)
+        elif crossover_type == 'real_values_crossover_heurestic':
+            return self.real_values_crossover_heurestic(a, b)
 
     def selection(self, selection_type: str, percentage, size_of_tournament):
         if selection_type == 'best_of_all_selection':

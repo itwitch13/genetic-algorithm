@@ -1,5 +1,12 @@
+import math
 import random
 import numpy as np
+
+
+def calculate_bin_length(x_boundary: list):
+    binary = (x_boundary[1] - x_boundary[0]) * pow(10, 6) + 1
+    m = math.log2(binary)
+    return math.ceil(m)
 
 
 class Chromosome:
@@ -8,13 +15,22 @@ class Chromosome:
     genes = []
     fitness = 0
 
-    def __init__(self, *args, is_random: bool):
-        if is_random:
-            self.x = [random.randint(0, 1) for i in range(args[0])]
-            self.y = [random.randint(0, 1) for i in range(args[1])]
-        else:
-            self.x = args[0]
-            self.y = args[1]
+    def __init__(self, *args, is_random: bool, is_in_real_value: bool):
+        if not is_in_real_value:
+            if is_random:
+                self.x = [random.randint(0, 1) for i in range(args[0])]
+                self.y = [random.randint(0, 1) for i in range(args[1])]
+            else:
+                self.x = args[0]
+                self.y = args[1]
+
+        if is_in_real_value:
+            if is_random:
+                self.x = random.randint(args[0][0], args[0][1])
+                self.y = random.randint(args[1][0], args[1][1])
+            else:
+                self.x = args[0]
+                self.y = args[1]
 
     def mutate(self, mutation_rate):
         mutated = False
@@ -56,6 +72,13 @@ class Chromosome:
 
         self.inversion('x', random_point_x_first, random_point_x_second)
         self.inversion('y', random_point_y_first, random_point_y_second)
+
+    def real_values_uniform_mutation(self, boundaries_x: list, boundaries_y: list):
+        choosen_gene = random.randint(0, 1)
+        if choosen_gene == 0:
+            self.x = random.randint(boundaries_x[0], boundaries_x[1])
+        elif choosen_gene == 1:
+            self.y = random.randint(boundaries_y[0], boundaries_y[1])
 
     def inversion(self, chromo, point1, point2):
         if chromo == 'x':

@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 
 
 class AppWindowWidget(QWidget, Ui_MainWindow):
-
     send_configurations = QtCore.pyqtSignal()
     send_plots = QtCore.pyqtSignal(list, list)
 
@@ -57,10 +56,12 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         selections = ['best_of_all_selection', 'roulette_wheel_selection', 'tournament_selection']
         self.selectionComboBox.addItems(selections)
 
-        crossovers = ['crossover_one_point', 'crossover_two_point', 'crossover_homogenous']
+        crossovers = ['crossover_one_point', 'crossover_two_point', 'crossover_homogenous',
+                      'real_values_crossover_arithmetic', 'real_values_crossover_heurestic']
         self.crossoverComboBox.addItems(crossovers)
 
-        mutations = ['edge_mutation', 'one_point_mutation', 'two_points_mutation', 'inversion_mutation']
+        mutations = ['edge_mutation', 'one_point_mutation', 'two_points_mutation', 'inversion_mutation',
+                     'real_values_uniform_mutation']
         self.mutationComboBox.addItems(mutations)
 
         self.populationLineEdit.setText(str(50))
@@ -91,7 +92,8 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.percentage_selection = float(self.percentLineEdit.text())
         self.elite_strategy_amount = int(self.eliteLineEdit.text())
         self.crossover_probability = float(self.crossProbLineEdit.text())
-
+        self.is_in_real_value = True
+        self.k_coefficient = 0.1
 
     def binary_to_float(self, binary_value, border_a, border_b, m):
         combined_value = ''.join(map(str, binary_value))
@@ -105,8 +107,8 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.get_configurations()
         self.plot_x, self.plot_y, self.plot_fx = [], [], []
         population = Population(booth_function, self.mutation_probability, self.crossover_probability,
-                                self.elite_strategy_amount, self.population_size, self.x_boundaries,
-                                self.y_boundaries)
+                                self.elite_strategy_amount, self.population_size, self.is_in_real_value,
+                                self.k_coefficient, self.x_boundaries, self.y_boundaries)
         population.calculate_fitness()
 
         while self.generations != population.generations:
@@ -117,10 +119,13 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
             population.calculate_fitness()
             print("generation: ", population.generations)
             for i in population.population:
-                print(
-                    f'x: {self.binary_to_float(i.x, self.x_boundaries[0], self.x_boundaries[1], len(i.x))} \
-                    y: {self.binary_to_float(i.y, self.y_boundaries[0], self.y_boundaries[1], len(i.y))} '
-                    f'f(x,y): {i.fitness}')
+                if not self.is_in_real_value:
+                    print(
+                        f'x: {self.binary_to_float(i.x, self.x_boundaries[0], self.x_boundaries[1], len(i.x))} \
+                        y: {self.binary_to_float(i.y, self.y_boundaries[0], self.y_boundaries[1], len(i.y))} '
+                        f'f(x,y): {i.fitness}')
+                else:
+                    print(f'x: {i.x} y: {i.y} f(x,y): {i.fitness}')
             self.every_generation_best_fitness.append(population.highest_fitness)
 
         timeOfAll = time.clock() - start_time

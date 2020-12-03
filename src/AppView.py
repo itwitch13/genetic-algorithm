@@ -64,6 +64,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
                      'real_values_uniform_mutation']
         self.mutationComboBox.addItems(mutations)
 
+        self.realValueComboBox.addItems(['True', 'False'])
         self.populationLineEdit.setText(str(50))
         self.generationLineEdit.setText(str(50))
         self.mutationLineEdit.setText(str(0.01))
@@ -74,6 +75,7 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.eliteLineEdit.setText(str(2))
         self.percentLineEdit.setText(str(0.03))
         self.tournamentLineEdit.setText(str(3))
+        self.coefLineEdit.setText(str(0.1))
 
     def get_configurations(self):
         self.selection_type = str(self.selectionComboBox.currentText())
@@ -92,8 +94,8 @@ class AppWindowWidget(QWidget, Ui_MainWindow):
         self.percentage_selection = float(self.percentLineEdit.text())
         self.elite_strategy_amount = int(self.eliteLineEdit.text())
         self.crossover_probability = float(self.crossProbLineEdit.text())
-        self.is_in_real_value = True
-        self.k_coefficient = 0.1
+        self.is_in_real_value = bool(self.realValueComboBox.currentText())
+        self.k_coefficient = float(self.coefLineEdit.text())
 
     def binary_to_float(self, binary_value, border_a, border_b, m):
         combined_value = ''.join(map(str, binary_value))
